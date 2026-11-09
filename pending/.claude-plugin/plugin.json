@@ -1,0 +1,9 @@
+{
+  "name": "pending",
+  "version": "0.2.0",
+  "description": "A todo list for Claude: what is still pending in each of your chats, in one place.",
+  "author": { "name": "Kai" },
+  "license": "MIT",
+  "keywords": ["todo", "pending", "productivity"],
+  "types": "./types/index.d.ts"
+}

@@ -1,0 +1,29 @@
+# Pending
+
+A todo list for Claude: what is still pending in each of your chats, in one place.
+
+After each reply, the mod asks Claude what is still open in that chat: work it left unfinished, follow-ups, and anything waiting on you. Each chat gets one card, and items leave by themselves once Claude says they are done.
+
+## What you can do
+
+- **Open the list.** Click the line above the prompt box, or run `/pending`. Press Esc to close it.
+- **Do it.** Sends the item to Claude in the chat you are in. Only offered for items from the current project.
+- **Done.** Removes the item, and Claude will not list it again in that chat.
+- **Add.** Type your own item. It stays until you press Do it or Done.
+
+## Good to know
+
+- Each reply costs one extra model call, which reuses the prompt cache.
+- The list is Claude's own account, so it can miss things or list too much.
+- The list is kept on your machine, for the latest 100 chats. New items from another open chat appear within about 15 seconds.
+- Subagents and interrupted turns are not collected.
+
+## Install
+
+```
+/plugin install pending --marketplace Ktchan825/dont-assume
+```
+
+## License
+
+MIT

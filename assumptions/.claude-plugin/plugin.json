@@ -1,0 +1,9 @@
+{
+  "name": "assumptions",
+  "version": "0.3.1",
+  "description": "See the assumptions the AI made, grouped by the problem you are solving. Correct them and refresh in one click.",
+  "author": { "name": "Kai" },
+  "license": "MIT",
+  "keywords": ["assumptions", "review", "productivity"],
+  "types": "./types/index.d.ts"
+}

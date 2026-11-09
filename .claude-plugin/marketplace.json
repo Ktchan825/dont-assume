@@ -1,0 +1,17 @@
+{
+  "name": "dont-assume",
+  "owner": { "name": "Kai" },
+  "metadata": { "description": "Mods that show what Claude assumed and what it still has to do." },
+  "plugins": [
+    {
+      "name": "assumptions",
+      "source": "./assumptions",
+      "description": "See the assumptions the AI made, grouped by the problem you are solving. Correct them and refresh in one click."
+    },
+    {
+      "name": "pending",
+      "source": "./pending",
+      "description": "A todo list for Claude: what is still pending in each of your chats, in one place."
+    }
+  ]
+}
