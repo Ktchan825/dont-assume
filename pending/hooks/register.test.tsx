@@ -219,6 +219,40 @@ test('an item the person added survives a reply', async ($, on) => {
   await ui.unmount()
 })
 
+const opens = (on: On) => {
+  const opened: { id: string; focus?: true }[] = []
+  mock.clock(on)
+  on('ui.open', (_, e) => {
+    opened.push(e)
+
+    return { value: { isPlaced: true } }
+  })
+
+  return opened
+}
+
+test('a new chat opens the list without taking the keyboard', async ($, on) => {
+  const opened = opens(on)
+  world(on)
+
+  await $.session.start(START)
+
+  expect(opened.map(o => o.id)).toEqual(['pending'])
+  expect(opened[0]?.focus).toBeUndefined()
+})
+
+test('a list closed by hand stays closed until /pending opens it again', async ($, on) => {
+  const opened = opens(on)
+  world(on, { autoOpen: false })
+
+  await $.session.start(START)
+  expect(opened.length).toBe(0)
+
+  await $.command.run({ command: 'pending', args: '' } as never)
+  await $.session.start(START)
+  expect(opened.length).toBe(2)
+})
+
 test('an unreadable reply keeps the list, and subagents ask nothing', async ($, on) => {
   const clock = mock.clock(on)
   world(on, { chats: [chat('s1', '/work/alpha', 'Deploy')] })

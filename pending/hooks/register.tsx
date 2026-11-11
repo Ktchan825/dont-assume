@@ -6,6 +6,8 @@ import type { Chat, Locale, Todo } from '../types'
 const PANE = 'pending'
 const STORE = 'chats'
 const STORE_LOCALE = 'locale'
+// false once the person closes the list by hand; opening it again clears that.
+const STORE_AUTO = 'autoOpen'
 const POLL_MS = 15_000
 const chats = atom({ plugin: 'pending', key: 'chats' } as const, [], {
   shape: 'chats-1',
@@ -271,6 +273,7 @@ const add = async ($: EngineInterface, value: string) => {
 
 const open = async ($: EngineInterface) => {
   await load($)
+  await $.store.set(STORE_AUTO, true).catch(() => undefined)
 
   return $.ui.open({
     id: PANE,
@@ -295,6 +298,20 @@ export const register: Register = on => {
 
     await load($)
     $.clock.every(POLL_MS, () => void load($))
+
+    // Without focus, so it never takes the keyboard from the prompt. The
+    // engine seats it only where the window is wide enough.
+    if ((await $.store.get(STORE_AUTO)) !== false) {
+      await $.ui.open({ id: PANE, title: (await strings($)).title, closeOnEscape: true })
+    }
+
+    return next(e)
+  })
+
+  on('ui.close', async ($, e, next) => {
+    if (e.id === PANE && e.origin.kind === 'person') {
+      await $.store.set(STORE_AUTO, false).catch(() => undefined)
+    }
 
     return next(e)
   })
