@@ -8,6 +8,8 @@ const STORE = 'chats'
 const STORE_LOCALE = 'locale'
 // false once the person closes the list by hand; opening it again clears that.
 const STORE_AUTO = 'autoOpen'
+// false while collecting is off: no extra model call after each reply.
+const STORE_COLLECT = 'collect'
 const POLL_MS = 15_000
 const chats = atom({ plugin: 'pending', key: 'chats' } as const, [], {
   shape: 'chats-1',
@@ -31,6 +33,9 @@ const STRINGS = {
     notSent: 'Could not send this to Claude.',
     failed: (why: string) => `Could not update pending items (${why})`,
     opened: 'Opened the to-do list.',
+    off: 'Collecting is off in every chat: no extra model call after replies. The list stays. /pending on turns it back on.',
+    on: 'Collecting is on: one extra model call after each reply.',
+    usage: 'Usage: /pending [on|off]. With no argument it opens the list.',
   },
   zh: {
     title: 'Claude 待辦',
@@ -48,6 +53,9 @@ const STRINGS = {
     notSent: '未能交給 Claude。',
     failed: (why: string) => `未能更新待辦（${why}）`,
     opened: '已打開待辦清單。',
+    off: '已在所有對話停止收集：回覆後不再多一次 model call，清單保留。/pending on 可重新開啟。',
+    on: '已開啟收集：每次回覆後多一次 model call。',
+    usage: '用法：/pending [on|off]。不加參數就打開清單。',
   },
 } as const
 
@@ -287,7 +295,8 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'pending',
-      description: 'Show what is still pending across your chats',
+      description: 'Show what is still pending across your chats; on/off switches collecting',
+      argumentHint: '[on|off]',
     })
     lastProject = await projectOf($, e.cwd)
     const saved = await $.store.get(STORE_LOCALE)
@@ -316,14 +325,30 @@ export const register: Register = on => {
     return next(e)
   })
 
-  on('command.run', { command: 'pending' }, async $ => {
+  on('command.run', { command: 'pending' }, async ($, e) => {
+    const t = await strings($)
+    const wanted = e.args.trim().toLowerCase()
+
+    if (wanted === 'on' || wanted === 'off') {
+      await $.store.set(STORE_COLLECT, wanted === 'on')
+
+      return { text: t[wanted] }
+    }
+
+    if (wanted !== '') {
+      return { text: t.usage }
+    }
+
     await open($)
 
-    return { text: (await strings($)).opened }
+    return { text: t.opened }
   })
 
-  on('turn.complete', ($, e, next) => {
-    if (e.agentId === undefined && e.reason === 'answer' && e.answer !== '') {
+  on('turn.complete', async ($, e, next) => {
+    // Read each time, so switching it in another chat applies here too.
+    const isOn = (await $.store.get(STORE_COLLECT).catch(() => true)) !== false
+
+    if (isOn && e.agentId === undefined && e.reason === 'answer' && e.answer !== '') {
       // On a timer, so the turn ends without waiting for the extra model call.
       $.clock.after(0, () => void collect($, e.answer))
     }

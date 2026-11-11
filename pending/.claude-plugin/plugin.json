@@ -1,6 +1,6 @@
 {
   "name": "pending",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A todo list for Claude: what is still pending in each of your chats, in one place.",
   "author": { "name": "Kai" },
   "license": "MIT",

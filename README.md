@@ -32,7 +32,7 @@ In the desktop app, click + next to the prompt box, then Plugins, Add marketplac
 
 ## Before you install
 
-- Each mod makes one extra model call after every reply, which counts toward your usage.
+- Each mod makes one extra model call after every reply, which counts toward your usage. Turn it off in every chat with `/assumptions off` or `/pending off`, and back on with `on`.
 - Short summaries of your conversations are stored on your own machine, under `~/.claude/plugins/store/`. Neither mod sends them anywhere else.
 - Both lists are the AI's own account, so they can miss things.
 

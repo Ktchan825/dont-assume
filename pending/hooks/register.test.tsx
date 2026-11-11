@@ -269,3 +269,21 @@ test('an unreadable reply keeps the list, and subagents ask nothing', async ($, 
   expect(await ui.find({ type: 'Text', text: /Deploy/ })).toBeDefined()
   await ui.unmount()
 })
+
+test('off stops the extra model call in every chat, on brings it back', async ($, on) => {
+  const clock = mock.clock(on)
+  world(on)
+  const asked = answers(on, [])
+  on('ui.open', () => ({ value: { isPlaced: true } }))
+
+  await $.session.start(START)
+  await $.command.run({ command: 'pending', args: 'off' } as never)
+  await $.turn.complete({ ...TURN, answer: 'first' })
+  await clock.advance(1)
+  expect(asked.length).toBe(0)
+
+  await $.command.run({ command: 'pending', args: 'on' } as never)
+  await $.turn.complete({ ...TURN, answer: 'second' })
+  await clock.advance(1)
+  expect(asked.length).toBe(1)
+})

@@ -14,6 +14,8 @@ const mode = atom({ plugin: 'assumptions', key: 'mode' } as const, 'all')
 const STORE = 'problems'
 const STORE_MODE = 'mode'
 const STORE_LOCALE = 'locale'
+// false while collecting is off: no extra model call after each reply.
+const STORE_COLLECT = 'collect'
 const POLL_MS = 15_000
 const many = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
 
@@ -41,6 +43,9 @@ const STRINGS = {
     save: 'Save',
     cancel: 'Cancel',
     opened: 'Opened the assumptions list.',
+    off: 'Collecting is off in every chat: no extra model call after replies. The list and Refresh stay. /assumptions on turns it back on.',
+    on: 'Collecting is on: one extra model call after each reply.',
+    usage: 'Usage: /assumptions [on|off]. With no argument it opens the list.',
     failed: (why: string) => `Could not update assumptions (${why})`,
     notTold: 'Saved, but the AI could not be told about this edit.',
   },
@@ -66,6 +71,9 @@ const STRINGS = {
     save: '儲存',
     cancel: '取消',
     opened: '已打開假設清單。',
+    off: '已在所有對話停止收集：回覆後不再多一次 model call，清單同「更新」保留。/assumptions on 可重新開啟。',
+    on: '已開啟收集：每次回覆後多一次 model call。',
+    usage: '用法：/assumptions [on|off]。不加參數就打開清單。',
     failed: (why: string) => `未能更新假設（${why}）`,
     notTold: '已儲存，但未能通知 AI 這次修改。',
   },
@@ -393,7 +401,8 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'assumptions',
-      description: 'Show the assumptions the AI made, grouped by problem',
+      description: 'Show the assumptions the AI made, grouped by problem; on/off switches collecting',
+      argumentHint: '[on|off]',
     })
     await $.command.register({
       name: 'assumptions-mode',
@@ -422,10 +431,23 @@ export const register: Register = on => {
     return next(e)
   })
 
-  on('command.run', { command: 'assumptions' }, async $ => {
+  on('command.run', { command: 'assumptions' }, async ($, e) => {
+    const t = await strings($)
+    const wanted = e.args.trim().toLowerCase()
+
+    if (wanted === 'on' || wanted === 'off') {
+      await $.store.set(STORE_COLLECT, wanted === 'on')
+
+      return { text: t[wanted] }
+    }
+
+    if (wanted !== '') {
+      return { text: t.usage }
+    }
+
     await open($)
 
-    return { text: (await strings($)).opened }
+    return { text: t.opened }
   })
 
   on('command.run', { command: 'assumptions-mode' }, async ($, e) => {
@@ -445,8 +467,15 @@ export const register: Register = on => {
   })
 
   on('turn.complete', async ($, e, next) => {
+    // Read each time, so switching it in another chat applies here too.
+    const isOn = (await $.store.get(STORE_COLLECT).catch(() => true)) !== false
+
     if (e.agentId === undefined && e.reason === 'answer' && e.answer !== '') {
+      // Kept even while off, so Refresh still reads the latest reply.
       lastAnswer = e.answer
+    }
+
+    if (isOn && e.agentId === undefined && e.reason === 'answer' && e.answer !== '') {
       // On a timer, so the turn ends without waiting for the extra model call.
       $.clock.after(0, () => void collect($, e.answer))
     }

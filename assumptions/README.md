@@ -16,17 +16,11 @@ Labels follow the language of the conversation (English or Chinese). On the mobi
 
 ## Good to know
 
-- Collecting assumptions makes one extra model call after each reply, and Refresh makes one per press. Both reuse the prompt cache and count toward your session's usage.
+- Collecting assumptions makes one extra model call after each reply, and Refresh makes one per press. Both reuse the prompt cache and count toward your session's usage. `/assumptions off` stops collecting in every chat and keeps the list; `/assumptions on` starts it again.
 - The list is the AI's own account, made after the fact, so it can miss things. Treat it as a prompt to check, not as a complete record.
 - The list is kept on your machine across sessions, up to the latest 200 cards. Subagents and interrupted turns are not collected.
 - Refresh appears only on cards touched in the current conversation, because it re-checks against that conversation.
 - Git worktrees count as the repository they belong to. Outside git, a project is its folder.
-
-## Install
-
-```
-/plugin install assumptions --marketplace Ktchan825/dont-assume
-```
 
 ## License
 

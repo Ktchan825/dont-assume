@@ -14,7 +14,7 @@ After each reply, the mod asks Claude what is still open in that chat: work it l
 
 ## Good to know
 
-- Each reply costs one extra model call, which reuses the prompt cache.
+- Each reply costs one extra model call, which reuses the prompt cache. `/pending off` stops it in every chat and keeps the list; `/pending on` starts it again.
 - The list is Claude's own account, so it can miss things or list too much.
 - The list is kept on your machine, for the latest 100 chats. New items from another open chat appear within about 15 seconds.
 - Subagents and interrupted turns are not collected.
