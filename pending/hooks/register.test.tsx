@@ -100,23 +100,25 @@ test('each reply restates what is open, so finished work leaves', async ($, on) 
   await ui.unmount()
 })
 
-test('a done item does not come back in that chat', async ($, on) => {
-  const clock = mock.clock(on)
-  world(on)
-  const asked = answers(on, ['## Work\n- Deploy', '## Work\n- Deploy\n- Write docs'])
+test("only the person's own items have Done, and it removes them", async ($, on) => {
+  world(on, {
+    chats: [
+      { ...chat('s1', '/work/alpha', 'Deploy'), todos: [
+        { id: 'c1', text: 'Deploy', isManual: false },
+        { id: 'm1', text: 'Check the invoice', isManual: true },
+      ] },
+    ],
+  })
+  on('ui.open', () => ({ value: { isPlaced: true } }))
 
   await $.session.start(START)
-  await $.turn.complete({ ...TURN, answer: 'first' })
-  await clock.advance(1)
-
   const ui = await $.ui.mount(PANE)
-  await ui.press({ key: await keyOf(ui, /Done/) })
-  await $.turn.complete({ ...TURN, answer: 'second' })
-  await clock.advance(1)
+  expect((await ui.findAll({ type: 'Button', text: /Done/ })).length).toBe(1)
 
-  expect(asked[1]).toContain('<dismissed>\n- Deploy')
-  expect(await ui.find({ type: 'Text', text: /Deploy/ })).toBeUndefined()
-  expect(await ui.find({ type: 'Text', text: /Write docs/ })).toBeDefined()
+  await ui.press({ key: await keyOf(ui, /Done/) })
+
+  expect(await ui.find({ type: 'Text', text: /Check the invoice/ })).toBeUndefined()
+  expect(await ui.find({ type: 'Text', text: /Deploy/ })).toBeDefined()
   await ui.unmount()
 })
 
@@ -149,7 +151,6 @@ test('another project shows its name and cannot be run here', async ($, on) => {
 
   expect(await ui.find({ type: 'Text', text: /beta/ })).toBeDefined()
   expect(await ui.find({ type: 'Button', text: /Do it/ })).toBeUndefined()
-  expect(await ui.find({ type: 'Button', text: /Done/ })).toBeDefined()
   await ui.unmount()
 })
 
@@ -194,7 +195,7 @@ test('a change from another chat shows up without reopening', async ($, on) => {
 })
 
 test('the label language comes back in the next session', async ($, on) => {
-  world(on, { locale: 'zh', chats: [chat('s0', '/work/alpha', 'Deploy')] })
+  world(on, { locale: 'zh', chats: [chat('s0', '/work/alpha', 'Deploy', true)] })
 
   await $.session.start(START)
   const ui = await $.ui.mount(PANE)

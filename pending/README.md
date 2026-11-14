@@ -9,8 +9,7 @@ After each reply, the mod asks Claude what is still open in that chat: work it l
 - **Open the list.** It opens by itself in each new chat when the window is wide enough. Otherwise click the line above the prompt box, or run `/pending`.
 - **Close it.** Press Esc or close the pane. New chats then leave it closed until you open it again.
 - **Do it.** Sends the item to Claude in the chat you are in. Only offered for items from the current project.
-- **Done.** Removes the item, and Claude will not list it again in that chat.
-- **Add.** Type your own item. It stays until you press Do it or Done.
+- **Add.** Type your own item. It stays until you press Do it or Done; only your own items have Done, since Claude's leave by themselves.
 
 ## Good to know
 

@@ -224,17 +224,13 @@ const collect = async ($: EngineInterface, answer: string) => {
   }
 }
 
+// Only the person's own items have Done; Claude's leave by themselves.
 const finish = ($: EngineInterface, chat: Chat, todo: Todo) =>
   change($, list =>
     list.map(c =>
       c.sessionId !== chat.sessionId
         ? c
-        : {
-            ...c,
-            todos: c.todos.filter(t => t.id !== todo.id),
-            // Otherwise the next reply could list it again.
-            dismissed: todo.isManual ? c.dismissed : [...c.dismissed, todo.text].slice(-50),
-          },
+        : { ...c, todos: c.todos.filter(t => t.id !== todo.id) },
     ),
   )
 
@@ -446,11 +442,14 @@ export const register: Register = on => {
                       onPress={() => run($, chat, todo)}
                     />
                   )}
-                  <Button
-                    key={`done:${todo.id}`}
-                    label={t.done}
-                    onPress={() => finish($, chat, todo)}
-                  />
+                  {/* Claude's items leave by themselves once its reply says so. */}
+                  {todo.isManual && (
+                    <Button
+                      key={`done:${todo.id}`}
+                      label={t.done}
+                      onPress={() => finish($, chat, todo)}
+                    />
+                  )}
                 </Box>
               </Box>
             ))}
